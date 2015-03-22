@@ -1,6 +1,7 @@
 # lo
 A perl script to manage ssh login to remote servers.
 
+```
 age:
 lo .                             - show all the mappings
 lo ls                            - show all the mappings
@@ -21,5 +22,5 @@ lo [host] dl [remote_path] [local_path]
                                    rsync -aze ssh :[remote_path] [local_path]
 lo [host] ulx [local] [remote]   - same as ul but also delete remote path/file to mirror local
 lo [host] dlx [local] [remote]   - same as dl but also delete local path/file to mirror remote
-
+```
 
