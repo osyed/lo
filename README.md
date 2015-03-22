@@ -1,5 +1,31 @@
 # lo
-A perl script to manage ssh login to remote servers.
+A perl script to manage ssh login to remote servers. Makes ssh and rsync easier.
+
+First setup a mapping:
+* lo devbox = myuserid@host1.company.com
+
+Now instead of:
+* ssh myuserid@host1.company.com
+* lo devbox
+
+To setup auto login using keys instead of password:
+* lo devbox auto
+
+To run a command on devbox:
+* lo devbox run ls -al
+
+To upload a file or directory to devbox:
+* lo devbox ul file.txt
+* lo devbox ul file.txt newfile.txt
+* lo devbox ul file.txt tmpdir
+* lo devbox ul file.txt tmpdir/newfile.txt
+
+To download a file or directory from devbox:
+* lo devbox dl file.txt
+* lo devbox dl file.txt newfile.txt
+* lo devbox dl file.txt tmpdir
+* lo devbox dl file.txt tmpdir/newfile.txt
+
 
 ```
 Usage:
