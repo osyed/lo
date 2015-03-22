@@ -2,7 +2,7 @@
 A perl script to manage ssh login to remote servers.
 
 ```
-age:
+Usage:
 lo .                             - show all the mappings
 lo ls                            - show all the mappings
 lo .show                         - show all the mappings
