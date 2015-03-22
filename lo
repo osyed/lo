@@ -1,0 +1,168 @@
+#!/usr/bin/env perl
+
+$usage = <<EOM;
+
+Usage:
+lo .                             - show all the mappings
+lo ls                            - show all the mappings
+lo .show                         - show all the mappings
+lo [host]                        - login to the specified host
+lo [host] = [user\@host.domain]   - map host to the given value
+lo [host] is                     - show what host is mapped to
+lo [host] auto                   - automate login to host
+lo [host] rm|del                 - delete the host mapping
+lo [host] tcsh                   - setup host with tcsh and shell scripts
+lo [host] com|run [command]      - execute command on host
+lo [host] / [command]            - execute command on host
+lo [host] ul [local_path] [remote_path]
+                                 - upload to the remote host
+                                   rsync -aze ssh [local_path] $remote:[remote_path]
+lo [host] dl [remote_path] [local_path]
+                                 - download from the remote host
+                                   rsync -aze ssh $remote:[remote_path] [local_path]
+lo [host] ulx [local] [remote]   - same as ul but also delete remote path/file to mirror local
+lo [host] dlx [local] [remote]   - same as dl but also delete local path/file to mirror remote
+
+
+TODO
+lo [host_from]:[path] to [host_to]:[path]
+      transfer the contents of path one host to another
+
+EOM
+
+$host = $ARGV[0];
+$action = $ARGV[1];
+$value = $ARGV[2];
+$arg1 = $ARGV[2];
+$arg2 = $ARGV[3];
+$arg3 = $ARGV[4];
+
+$home = $ENV{HOME};
+$conf = "$home/.lo.hosts";
+
+if (! $host){ die $usage; }
+if (($host eq '.show') || ($host eq '.') || ($host eq 'ls')){
+  print "$conf\n";
+  if ($action ne ''){
+    print `cat $conf | grep -P '\\w' | grep "$action" | sort`;
+  }
+  else{
+    print `cat $conf | grep -P '\\w' | sort`;
+  }
+  exit;
+}
+
+# read the host mapping file
+%h = readHost();
+$remote = $h{$host};
+
+$didit = 0;
+
+if ($action eq '='){
+  if (! $value){ 
+    die "Need user\@host.domain\n";
+  }
+  $h{$host} = $value;
+  writeHost(%h);
+  exit;
+}
+if ($remote eq ''){
+  die "$host has no mapping. Try: lo $host = user\@host.domain\n";
+}
+if ($action eq 'auto'){
+  if (! -e "$home/.ssh/id_rsa.pub"){
+    print `ssh-keygen -t rsa`;
+  }
+  print "you will be prompted for the remote password twice\n";
+  `ssh $remote "mkdir -p .ssh; touch .ssh/authorized_keys; chmod go-rwx .ssh/authorized_keys .ssh"`;
+  `cat ~/.ssh/id_rsa.pub | ssh $remote 'cat >> .ssh/authorized_keys'`;
+  exit;
+}
+if ($action eq 'is'){
+  if ($h{$host}){ print "$h{$host}\n";}
+  exit;
+}
+if (($action eq 'rm') || ($action eq 'del')){
+  delete $h{$host};
+  writeHost(%h);
+  exit;
+}
+if (($action eq 'com') || ($action eq 'run') || ($action eq '/')){
+  print "$remote\n";
+  # run the command
+  $rc = join(' ',@ARGV[2..$#ARGV]);
+  print `ssh $remote '$rc'`;
+  exit;
+}
+if ($action eq 'tcsh'){
+  # make sure we have auto first
+  `rsync -ae ssh $home/.setup_shell.tgz $remote:`;
+  print `ssh $remote 'tar xzpf .setup_shell.tgz'`;
+  print `ssh $remote 'chsh -s /bin/tcsh'`;
+  $didit = 1;
+}
+if ($action eq 'dl'){
+#      rsync -ae ssh $remote:[remote_path] [local_path]
+  if ($arg1 eq ''){ die "need remote path\n"; }
+  if ($arg2 eq ''){ $arg2 = '.'; }
+  if ($arg2 eq '-'){ $arg2 = $arg1; }
+  print `rsync -aze ssh $remote:$arg1 $arg2`;
+  $didit = 1;
+}
+if ($action eq 'ul'){
+#      rsync -ae ssh [local_path] $remote:[remote_path]
+  if ($arg1 eq ''){ die "need local path\n"; }
+  if ($arg2 eq '-'){ $arg2 = $arg1; }
+  print `rsync -aze ssh $arg1 $remote:$arg2`;
+  $didit = 1;
+}
+if ($action eq 'dlx'){
+#      rsync --delete-after -ae ssh $remote:[remote_path] [local_path]
+  if ($arg1 eq ''){ die "need remote path\n"; }
+  if ($arg2 eq ''){ $arg2 = '.'; }
+  if ($arg2 eq '-'){ $arg2 = $arg1; }
+  print `rsync --delete-after -aze ssh $remote:$arg1 $arg2`;
+  $didit = 1;
+}
+if ($action eq 'ulx'){
+#      rsync --delete-after -ae ssh [local_path] $remote:[remote_path]
+  if ($arg1 eq ''){ die "need local path\n"; }
+  if ($arg2 eq '-'){ $arg2 = $arg1; }
+  print `rsync --delete-after -aze ssh $arg1 $remote:$arg2`;
+  $didit = 1;
+}
+if (! $action){
+  %h = readHost();
+  if (! $h{$host}){ 
+    die "$host has no mapping. Try: lo $host = user\@host.domain\n";
+  }
+  print "ssh $h{$host}\n";
+  exec "ssh $h{$host}";
+  exit;
+}
+if (! $didit){
+  die "No action defined for: $action\n";
+}
+
+sub readHost{
+  my(%h, $fh, $l, $k, $v);
+  open($fh, "$conf");
+  foreach $l (<$fh>){
+    chomp $l;
+    ($k, $v) = ($l =~ m/(\S+) +(\S+)/);
+    if ($k){ $h{$k} = $v; }
+  }
+  close $fh;
+  return %h;
+}
+
+sub writeHost{
+  my(%h) = @_;
+  open($fh, ">$conf");
+  while(($k, $v) = each(%h)){
+    print $fh "$k $v\n";
+  }
+  close $fh;
+}
+
+
