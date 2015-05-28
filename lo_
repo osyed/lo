@@ -23,9 +23,6 @@ lo [host] dl [remote_path] [local_path]
 lo [host] ulx [local] [remote]   - same as ul but also delete remote path/file to mirror local
 lo [host] dlx [local] [remote]   - same as dl but also delete local path/file to mirror remote
 
-lo .keys                         - show all the ~/.ssh/*.pem files and current one in use
-lo [host] key [key_file]         - set the key file to use for the specified host
-
 
 TODO
 lo [host_from]:[path] to [host_to]:[path]
@@ -55,19 +52,9 @@ if (($host eq '.show') || ($host eq '.') || ($host eq 'ls')){
   exit;
 }
 
-if ($host eq '.keys'){
-  print `(cd ~/.ssh/; ls *.pem | sort)`;
-  exit;
-}
-
 # read the host mapping file
 %h = readHost();
-%k = readKeys();
 $remote = $h{$host};
-$key = $k{$host};
-if ($key){
-  $keyop = "-i ~/.ssh/$key";
-}
 
 $didit = 0;
 
@@ -104,49 +91,44 @@ if (($action eq 'com') || ($action eq 'run') || ($action eq '/')){
   print "$remote\n";
   # run the command
   $rc = join(' ',@ARGV[2..$#ARGV]);
-  print `ssh $keyop $remote '$rc'`;
+  print `ssh $remote '$rc'`;
   exit;
 }
 if ($action eq 'tcsh'){
   # make sure we have auto first
-  `rsync -ae ssh $keyop $home/.setup_shell.tgz $remote:`;
-  print `ssh $keyop $remote 'tar xzpf .setup_shell.tgz'`;
-  print `ssh $keyop $remote 'chsh -s /bin/tcsh'`;
+  `rsync -ae ssh $home/.setup_shell.tgz $remote:`;
+  print `ssh $remote 'tar xzpf .setup_shell.tgz'`;
+  print `ssh $remote 'chsh -s /bin/tcsh'`;
   $didit = 1;
 }
 if ($action eq 'dl'){
-#      rsync -ae ssh $keyop $remote:[remote_path] [local_path]
+#      rsync -ae ssh $remote:[remote_path] [local_path]
   if ($arg1 eq ''){ die "need remote path\n"; }
   if ($arg2 eq ''){ $arg2 = '.'; }
   if ($arg2 eq '-'){ $arg2 = $arg1; }
-  print `rsync -aze ssh $keyop $remote:$arg1 $arg2`;
+  print `rsync -aze ssh $remote:$arg1 $arg2`;
   $didit = 1;
 }
 if ($action eq 'ul'){
-#      rsync -ae ssh $keyop [local_path] $remote:[remote_path]
+#      rsync -ae ssh [local_path] $remote:[remote_path]
   if ($arg1 eq ''){ die "need local path\n"; }
   if ($arg2 eq '-'){ $arg2 = $arg1; }
-  print `rsync -aze ssh $keyop $arg1 $remote:$arg2`;
+  print `rsync -aze ssh $arg1 $remote:$arg2`;
   $didit = 1;
 }
 if ($action eq 'dlx'){
-#      rsync --delete-after -ae ssh $keyop $remote:[remote_path] [local_path]
+#      rsync --delete-after -ae ssh $remote:[remote_path] [local_path]
   if ($arg1 eq ''){ die "need remote path\n"; }
   if ($arg2 eq ''){ $arg2 = '.'; }
   if ($arg2 eq '-'){ $arg2 = $arg1; }
-  print `rsync --delete-after -aze ssh $keyop $remote:$arg1 $arg2`;
+  print `rsync --delete-after -aze ssh $remote:$arg1 $arg2`;
   $didit = 1;
 }
 if ($action eq 'ulx'){
-#      rsync --delete-after -ae ssh $keyop [local_path] $remote:[remote_path]
+#      rsync --delete-after -ae ssh [local_path] $remote:[remote_path]
   if ($arg1 eq ''){ die "need local path\n"; }
   if ($arg2 eq '-'){ $arg2 = $arg1; }
-  print `rsync --delete-after -aze ssh $keyop $arg1 $remote:$arg2`;
-  $didit = 1;
-}
-if ($action eq 'key'){
-  $k{$host} = $arg1;
-  writeHost(%h);
+  print `rsync --delete-after -aze ssh $arg1 $remote:$arg2`;
   $didit = 1;
 }
 if (! $action){
@@ -154,8 +136,8 @@ if (! $action){
   if (! $h{$host}){ 
     die "$host has no mapping. Try: lo $host = user\@host.domain\n";
   }
-  print "ssh $keyop $h{$host}\n";
-  exec "ssh $keyop $h{$host}";
+  print "ssh $h{$host}\n";
+  exec "ssh $h{$host}";
   exit;
 }
 if (! $didit){
@@ -174,30 +156,11 @@ sub readHost{
   return %h;
 }
 
-sub readKeys{
-  my(%h, $fh, $l, $k, $v, $x);
-  open($fh, "$conf");
-  foreach $l (<$fh>){
-    chomp $l;
-    ($k, $x, $v) = ($l =~ m/(\S+) +(\S+) +(\S+)/);
-    if ($k){ $h{$k} = $v; }
-  }
-  close $fh;
-  return %h;
-}
-
 sub writeHost{
   my(%h) = @_;
-  my($fh, $k, $v, $w);
   open($fh, ">$conf");
   while(($k, $v) = each(%h)){
-    $w = $k{$k}; # set w to the key assigned to the host
-    if ($w){
-      print $fh "$k $v $w\n";
-    }
-    else{
-      print $fh "$k $v\n";
-    }
+    print $fh "$k $v\n";
   }
   close $fh;
 }
