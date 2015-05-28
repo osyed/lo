@@ -48,5 +48,7 @@ lo [host] dl [remote_path] [local_path]
                                    rsync -aze ssh :[remote_path] [local_path]
 lo [host] ulx [local] [remote]   - same as ul but also delete remote path/file to mirror local
 lo [host] dlx [local] [remote]   - same as dl but also delete local path/file to mirror remote
+lo .keys                         - show all the ~/.ssh/*.pem files and current one in use
+lo [host] key [key_file]         - set the key file to use for the specified host
 ```
 
