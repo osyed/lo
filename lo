@@ -56,7 +56,7 @@ if (($host eq '.show') || ($host eq '.') || ($host eq 'ls')){
 }
 
 if ($host eq '.keys'){
-  print `(cd ~/.ssh/; ls *.pem | sort)`;
+  print `(cd $home/.ssh/; ls *.pem | sort)`;
   exit;
 }
 
@@ -66,7 +66,7 @@ if ($host eq '.keys'){
 $remote = $h{$host};
 $key = $k{$host};
 if ($key){
-  $keyop = "-i ~/.ssh/$key";
+  $keyop = "-i $home/.ssh/$key";
 }
 
 $didit = 0;
@@ -119,14 +119,14 @@ if ($action eq 'dl'){
   if ($arg1 eq ''){ die "need remote path\n"; }
   if ($arg2 eq ''){ $arg2 = '.'; }
   if ($arg2 eq '-'){ $arg2 = $arg1; }
-  print `rsync -aze ssh $keyop $remote:$arg1 $arg2`;
+  print `rsync -aze 'ssh $keyop' $remote:$arg1 $arg2`;
   $didit = 1;
 }
 if ($action eq 'ul'){
 #      rsync -ae ssh $keyop [local_path] $remote:[remote_path]
   if ($arg1 eq ''){ die "need local path\n"; }
   if ($arg2 eq '-'){ $arg2 = $arg1; }
-  print `rsync -aze ssh $keyop $arg1 $remote:$arg2`;
+  print `rsync -aze 'ssh $keyop' $arg1 $remote:$arg2`;
   $didit = 1;
 }
 if ($action eq 'dlx'){
@@ -134,14 +134,14 @@ if ($action eq 'dlx'){
   if ($arg1 eq ''){ die "need remote path\n"; }
   if ($arg2 eq ''){ $arg2 = '.'; }
   if ($arg2 eq '-'){ $arg2 = $arg1; }
-  print `rsync --delete-after -aze ssh $keyop $remote:$arg1 $arg2`;
+  print `rsync --delete-after -aze 'ssh $keyop' $remote:$arg1 $arg2`;
   $didit = 1;
 }
 if ($action eq 'ulx'){
 #      rsync --delete-after -ae ssh $keyop [local_path] $remote:[remote_path]
   if ($arg1 eq ''){ die "need local path\n"; }
   if ($arg2 eq '-'){ $arg2 = $arg1; }
-  print `rsync --delete-after -aze ssh $keyop $arg1 $remote:$arg2`;
+  print `rsync --delete-after -aze 'ssh $keyop' $arg1 $remote:$arg2`;
   $didit = 1;
 }
 if ($action eq 'key'){
