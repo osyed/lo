@@ -44,10 +44,10 @@ if (! $host){ die $usage; }
 if (($host eq '.show') || ($host eq '.') || ($host eq 'ls')){
   print "$conf\n";
   if ($action ne ''){
-    print `cat $conf | grep -P '\\w' | grep "$action" | sort`;
+    print `cat $conf | grep '.' | grep "$action" | sort`;
   }
   else{
-    print `cat $conf | grep -P '\\w' | sort`;
+    print `cat $conf | grep '.' | sort`;
   }
   exit;
 }
