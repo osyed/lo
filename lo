@@ -84,6 +84,7 @@ if ($remote eq ''){
 }
 if ($action eq 'auto'){
   if (! -e "$home/.ssh/id_rsa.pub"){
+    print "if this gets stuck then manually run: ssh-keygen -t rsa\n";
     print `ssh-keygen -t rsa`;
   }
   print "you will be prompted for the remote password twice\n";
