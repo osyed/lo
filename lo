@@ -83,13 +83,13 @@ if ($remote eq ''){
   die "$host has no mapping. Try: lo $host = user\@host.domain\n";
 }
 if ($action eq 'auto'){
-  if (! -e "$home/.ssh/id_rsa.pub"){
-    print "if this gets stuck then manually run: ssh-keygen -t rsa\n";
-    print `ssh-keygen -t rsa`;
+  if (! -e "$home/.ssh/id_ed25519"){
+    print "if this gets stuck then manually run: ssh-keygen -t ed25519\n";
+    print `ssh-keygen -t ed25519`;
   }
   print "you will be prompted for the remote password twice\n";
   `ssh $remote "mkdir -p .ssh; touch .ssh/authorized_keys; chmod go-rwx .ssh/authorized_keys .ssh"`;
-  `cat ~/.ssh/id_rsa.pub | ssh $remote 'cat >> .ssh/authorized_keys'`;
+  `cat ~/.ssh/id_ed25519.pub | ssh $remote 'cat >> .ssh/authorized_keys'`;
   exit;
 }
 if ($action eq 'is'){
