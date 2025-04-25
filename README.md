@@ -52,3 +52,7 @@ lo .keys                         - show all the ~/.ssh/*.pem files and current o
 lo [host] key [key_file]         - set the key file to use for the specified host
 ```
 
+## Setup
+wget https://raw.githubusercontent.com/osyed/lo/refs/heads/master/lo
+chmod +x lo
+mv lo ~/bin  # or another directory that is in you path
